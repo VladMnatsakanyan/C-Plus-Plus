@@ -1,0 +1,117 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Expression {
+public:
+    virtual double evaluate(const string vars[], const double values[], int count) = 0;
+    virtual string toString() = 0;
+    virtual string toPostfix() = 0;
+    virtual ~Expression() {}
+};
+
+class Constant : public Expression {
+private:
+    double value;
+
+public:
+    Constant(double v) {
+        value = v;
+    }
+
+    double evaluate(const string[], const double[], int) override {
+        return value;
+    }
+
+    string toString() override {
+        return to_string((int)value);
+    }
+
+    string toPostfix() override {
+        return to_string((int)value);
+    }
+};
+
+class Variable : public Expression {
+private:
+    string name;
+
+public:
+    Variable(string n) {
+        name = n;
+    }
+
+    double evaluate(const string vars[], const double values[], int count) override {
+
+        for (int i = 0; i < count; i++) {
+            if (vars[i] == name)
+                return values[i];
+        }
+        return 0;
+    }
+
+    string toString() override {
+        return name;
+    }
+
+    string toPostfix() override {
+        return name;
+    }
+};
+
+class BinaryOp : public Expression {
+private:
+    char op;
+    Expression* left;
+    Expression* right;
+
+public:
+    BinaryOp(char o, Expression* l, Expression* r) {
+        op = o;
+        left = l;
+        right = r;
+    }
+
+    double evaluate(const string vars[], const double values[], int count) override {
+
+        double a = left->evaluate(vars, values, count);
+        double b = right->evaluate(vars, values, count);
+
+        if (op == '+') return a + b;
+        if (op == '-') return a - b;
+        if (op == '*') return a * b;
+        if (op == '/') return a / b;
+
+        return 0;
+    }
+
+    string toString() override {
+        return "(" + left->toString() + " " + op + " " + right->toString() + ")";
+    }
+
+    string toPostfix() override {
+        return left->toPostfix() + " " + right->toPostfix() + " " + op;
+    }
+
+    ~BinaryOp() {
+        delete left;
+        delete right;
+    }
+};
+
+int main() {
+
+    Expression* expr = new BinaryOp('-', new BinaryOp('+', new BinaryOp('*', new Variable("x"), new Constant(3)), new Variable("y")), new BinaryOp('/', new Variable("y"), new Constant(2)));
+
+    string vars[] = {"x", "y"};
+    double vals[] = {3, 4};
+
+    cout << "Infix: " << expr->toString() << endl;
+    cout << "Postfix: " << expr->toPostfix() << endl;
+    cout << "Evaluation: " << expr->evaluate(vars, vals, 2) << endl;
+
+    delete expr;
+
+    return 0;
+}
