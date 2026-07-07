@@ -1,0 +1,193 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class FileSystemObject {
+protected:
+    string name;
+
+public:
+    FileSystemObject(const string& n) : name(n) {}
+
+    string getName() const {
+        return name;
+    }
+};
+
+
+class File : public FileSystemObject {
+private:
+    int sizeKB;
+
+public:
+    File(const string& n = "", int s = 0)
+        : FileSystemObject(n), sizeKB(s) {}
+
+    int getSize() const {
+        return sizeKB;
+    }
+
+    bool operator==(const File& other) const {
+        return name == other.name && sizeKB == other.sizeKB;
+    }
+
+    friend ostream& operator<<(ostream& os, const File& file) {
+        os << "[File] " << file.name
+           << " (" << file.sizeKB << " KB)";
+        return os;
+    }
+};
+
+
+class Folder : public FileSystemObject {
+private:
+    File files[10];
+    int fileCount;
+
+    Folder* subfolders[5];
+    int folderCount;
+
+    
+    void printHelper(ostream& os, int level) const {
+        for (int i = 0; i < level; i++)
+            os << "  ";
+
+        os << "[Folder] " << name << endl;
+
+        for (int i = 0; i < fileCount; i++) {
+            for (int j = 0; j < level + 1; j++)
+                os << "  ";
+
+            os << files[i] << endl;
+        }
+
+        for (int i = 0; i < folderCount; i++) {
+            subfolders[i]->printHelper(os, level + 1);
+        }
+    }
+
+public:
+    Folder(const string& n = "") : FileSystemObject(n), fileCount(0), folderCount(0) {}
+
+    void addFile(const File& file) {
+        if (fileCount < 10) {
+            files[fileCount++] = file;
+        }
+    }
+
+    void addSubfolder(Folder* folder) {
+        if (folderCount < 5) {
+            subfolders[folderCount++] = folder;
+        }
+    }
+
+    int getTotalSize() const {
+        int total = 0;
+
+        for (int i = 0; i < fileCount; i++) {
+            total += files[i].getSize();
+        }
+
+        for (int i = 0; i < folderCount; i++) {
+            total += subfolders[i]->getTotalSize();
+        }
+
+        return total;
+    }
+
+    bool hasFile(const string& filename) const {
+        for (int i = 0; i < fileCount; i++) {
+            if (files[i].getName() == filename)
+                return true;
+        }
+
+        for (int i = 0; i < folderCount; i++) {
+            if (subfolders[i]->hasFile(filename))
+                return true;
+        }
+
+        return false;
+    }
+
+    bool operator==(const Folder& other) const {
+        if (name != other.name)
+            return false;
+
+        if (fileCount != other.fileCount || folderCount != other.folderCount)
+            return false;
+
+        for (int i = 0; i < fileCount; i++) {
+            if (!(files[i] == other.files[i]))
+                return false;
+        }
+
+        for (int i = 0; i < folderCount; i++) {
+            if (!(*subfolders[i] == *other.subfolders[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    friend ostream& operator<<(ostream& os, const Folder& folder) {
+        folder.printHelper(os, 0);
+        return os;
+    }
+};
+
+int main() {
+    Folder root("root");
+
+    root.addFile(File("file1.txt", 100));
+    root.addFile(File("file2.txt", 200));
+
+    Folder* sub1 = new Folder("subfolder1");
+    sub1->addFile(File("file3.txt", 300));
+
+    Folder* sub2 = new Folder("subfolder2");
+    sub2->addFile(File("file4.txt", 400));
+
+    Folder* sub1copy = new Folder("subfolder1");
+    sub1copy->addFile(File("file3.txt", 300));
+
+    sub2->addSubfolder(sub1copy);
+
+    root.addSubfolder(sub1);
+    root.addSubfolder(sub2);
+
+    cout << root << endl;
+
+    cout << "root has file4.txt? " << (root.hasFile("file4.txt") ? "Yes" : "No") << endl;
+
+    cout << "root has file3.txt? " << (root.hasFile("file3.txt") ? "Yes" : "No") << endl;
+
+    cout << "root has missing.txt? " << (root.hasFile("missing.txt") ? "Yes" : "No") << endl;
+
+    cout << "root total size: " << root.getTotalSize() << " KB" << endl;
+
+    Folder rootCopy("root");
+
+    rootCopy.addFile(File("file1.txt", 100));
+    rootCopy.addFile(File("file2.txt", 200));
+
+    Folder* copySub1 = new Folder("subfolder1");
+    copySub1->addFile(File("file3.txt", 300));
+
+    Folder* copySub2 = new Folder("subfolder2");
+    copySub2->addFile(File("file4.txt", 400));
+
+    Folder* copySub1_2 = new Folder("subfolder1");
+    copySub1_2->addFile(File("file3.txt", 300));
+
+    copySub2->addSubfolder(copySub1_2);
+
+    rootCopy.addSubfolder(copySub1);
+    rootCopy.addSubfolder(copySub2);
+
+    cout << "root copy equals original? " << ((rootCopy == root) ? "Yes" : "No") << endl;
+
+    cout << "root equals to subfolder1? " << ((root == *sub1) ? "Yes" : "No") << endl;
+
+    return 0;
+}
