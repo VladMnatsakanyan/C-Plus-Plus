@@ -1,0 +1,217 @@
+#include <iostream>
+#include <cmath>
+#include <stdexcept>
+
+using namespace std;
+
+class NoRealRootsException : public exception {
+public:
+    const char* what() const noexcept override {
+        return "No real roots";
+    }
+};
+
+class InfiniteSolutionsException : public exception {
+public:
+    const char* what() const noexcept override {
+        return "Infinite solutions";
+    }
+};
+
+class Equation {
+protected:
+    double* coeffs;
+    double* roots;
+    int numRoots;
+
+    virtual void print(ostream& os) const = 0;
+    virtual bool equals(const Equation& other) const = 0;
+
+public:
+    Equation(int size) {
+        coeffs = new double[size];
+        for (int i = 0; i < size; i++)
+            coeffs[i] = 0;
+            roots = nullptr;
+            numRoots = 0;
+    }
+
+    virtual ~Equation() {
+        delete[] coeffs;
+        delete[] roots;
+    }
+
+    virtual void solve() = 0;
+
+    friend ostream& operator<<(ostream& os, const Equation& eq) {
+        eq.print(os);
+        return os;
+    }
+
+    bool operator==(const Equation& other) const {
+        return equals(other);
+    }
+};
+
+class LinearEquation : public Equation {
+public:
+    LinearEquation(double a, double b) : Equation(2) {
+        coeffs[0] = a;
+        coeffs[1] = b;
+    }
+
+    void solve() override {
+        double a = coeffs[0];
+        double b = coeffs[1];
+
+        delete[] roots;
+        roots = nullptr;
+        numRoots = 0;
+
+        if (a == 0 && b == 0)
+            throw InfiniteSolutionsException();
+
+        if (a == 0 && b != 0)
+            throw NoRealRootsException();
+
+        numRoots = 1;
+        roots = new double[1];
+        roots[0] = -b / a;
+    }
+
+protected:
+    void print(ostream& os) const override {
+        os << "LinearEquation: " << coeffs[0] << "x + " << coeffs[1] << " = 0";
+
+        if (numRoots > 0) {
+            os << " | roots: ";
+            for (int i = 0; i < numRoots; i++)
+                os << roots[i] << " ";
+        }
+    }
+
+    bool equals(const Equation& other) const override {
+        const LinearEquation* o = dynamic_cast<const LinearEquation*>(&other);
+
+        if (!o) return false;
+
+        double a1 = coeffs[0], b1 = coeffs[1];
+        double a2 = o->coeffs[0], b2 = o->coeffs[1];
+
+        if (a1 == 0 && a2 == 0)
+            return b1 == b2;
+
+        if (a1 == 0 || a2 == 0)
+            return false;
+
+        return fabs(a1 * b2 - a2 * b1) < 1e-9;
+    }
+};
+
+class QuadraticEquation : public Equation {
+public:
+    QuadraticEquation(double a, double b, double c) : Equation(3) {
+        coeffs[0] = a;
+        coeffs[1] = b;
+        coeffs[2] = c;
+    }
+
+    void solve() override {
+        double a = coeffs[0];
+        double b = coeffs[1];
+        double c = coeffs[2];
+
+        delete[] roots;
+        roots = nullptr;
+        numRoots = 0;
+
+        if (a == 0) {
+            if (b == 0 && c == 0)
+                throw InfiniteSolutionsException();
+            if (b == 0)
+                throw NoRealRootsException();
+
+            numRoots = 1;
+            roots = new double[1];
+            roots[0] = -c / b;
+            return;
+        }
+
+        double d = b * b - 4 * a * c;
+
+        if (d < 0)
+            throw NoRealRootsException();
+
+        if (d == 0) {
+            numRoots = 1;
+            roots = new double[1];
+            roots[0] = -b / (2 * a);
+        } else {
+            numRoots = 2;
+            roots = new double[2];
+            roots[0] = (-b + sqrt(d)) / (2 * a);
+            roots[1] = (-b - sqrt(d)) / (2 * a);
+        }
+    }
+
+protected:
+    void print(ostream& os) const override {
+        os << "QuadraticEquation: " << coeffs[0] << "x^2 + " << coeffs[1] << "x + " << coeffs[2] << " = 0";
+
+        if (numRoots > 0) {
+            os << " | roots: ";
+            for (int i = 0; i < numRoots; i++)
+                os << roots[i] << " ";
+        }
+    }
+
+    bool equals(const Equation& other) const override {
+        const QuadraticEquation* o = dynamic_cast<const QuadraticEquation*>(&other);
+
+        if (!o) return false;
+
+        double a1 = coeffs[0], b1 = coeffs[1], c1 = coeffs[2];
+        double a2 = o->coeffs[0], b2 = o->coeffs[1], c2 = o->coeffs[2];
+
+        if (a1 == 0 && a2 == 0) {
+            return fabs(b1 * c2 - b2 * c1) < 1e-9;
+        }
+        if (a1 == 0 || a2 == 0)
+            return false;
+        return fabs(a1 * b2 - a2 * b1) < 1e-9 && fabs(a1 * c2 - a2 * c1) < 1e-9;
+    }
+};
+
+int main() {
+
+    Equation* eqs[4];
+
+    eqs[0] = new LinearEquation(2, 4);
+    eqs[1] = new LinearEquation(1, 2);
+    eqs[2] = new QuadraticEquation(1, -3, 2);
+    eqs[3] = new QuadraticEquation(2, -6, 4);
+
+    for (int i = 0; i < 4; i++) {
+        try {
+            eqs[i]->solve();
+            cout << *eqs[i] << endl;
+        }
+        catch (exception& e) {
+            cout << "Equation error: " << e.what() << endl;
+        }
+    }
+
+    cout << endl;
+    cout << "eq0 == eq1? "
+         << ((*eqs[0] == *eqs[1]) ? "Yes" : "No")
+         << endl;
+
+    cout << "eq2 == eq3? "
+         << ((*eqs[2] == *eqs[3]) ? "Yes" : "No")
+         << endl;
+
+    for (int i = 0; i < 4; i++)
+        delete eqs[i];
+
+    return 0;
+}
