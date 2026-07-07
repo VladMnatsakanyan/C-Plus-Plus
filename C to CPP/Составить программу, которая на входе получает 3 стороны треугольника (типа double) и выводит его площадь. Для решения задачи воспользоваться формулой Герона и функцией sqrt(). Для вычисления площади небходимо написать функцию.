@@ -1,0 +1,20 @@
+#include <iostream>
+#include <math.h>
+
+double makeres(double a, double b, double c) {
+    double p = (a+b+c) / 2;
+    double area = sqrt(p*(p-a)*(p-b)*(p-c));
+    return area;
+}
+int main()
+{
+    double x;
+    double y;
+    double z;
+    std::cin >> x;
+    std::cin >> y;
+    std::cin >> z;
+    double ardyunq = makeres(x, y, z);
+    std::cout << ardyunq;
+    return 0;
+}
