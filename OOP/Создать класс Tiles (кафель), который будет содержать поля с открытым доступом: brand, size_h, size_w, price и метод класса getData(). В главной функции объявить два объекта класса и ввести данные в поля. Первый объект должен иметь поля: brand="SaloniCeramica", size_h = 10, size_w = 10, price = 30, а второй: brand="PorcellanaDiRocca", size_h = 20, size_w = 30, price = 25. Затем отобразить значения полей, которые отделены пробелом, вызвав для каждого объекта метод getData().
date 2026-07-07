@@ -1,0 +1,31 @@
+#include <iostream>
+
+class Tiles {
+public:
+    std::string brand;
+    int size_h;
+    int size_w;
+    int price;
+    void getData() {
+        std::cout << brand << " " << size_h << " " << size_w << " " << price << std::endl;
+    }
+};
+
+int main()
+{
+    Tiles x1;
+    x1.brand = "SaloniCeramica";
+    x1.size_h = 10;
+    x1.size_w = 10;
+    x1.price = 30;
+    
+    Tiles x2;
+    x2.brand = "PorcellanaDiRocca";
+    x2.size_h = 20;
+    x2.size_w = 30;
+    x2.price = 25;
+    
+    x1.getData();
+    x2.getData();
+    return 0;
+}
