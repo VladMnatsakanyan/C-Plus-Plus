@@ -1,0 +1,234 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+
+using namespace std;
+
+class ToolBrokenException : public exception {
+public:
+    const char* what() const noexcept override {
+        return "Tool is broken!";
+    }
+};
+
+class IneffectiveToolException : public exception {
+public:
+    const char* what() const noexcept override {
+        return "Tool is not strong enough!";
+    }
+};
+
+class InvalidActionException : public exception {
+public:
+    const char* what() const noexcept override {
+        return "Invalid action!";
+    }
+};
+
+class Block;
+class Mob;
+
+class Item {
+protected:
+    string name;
+    string rarity;
+
+public:
+    Item(string n, string r) : name(n), rarity(r) {}
+
+    virtual void use() = 0;
+
+    virtual void print() const {
+        cout << "Item: " << name << " (" << rarity << ")";
+    }
+
+    virtual ~Item() {}
+
+    friend ostream& operator<<(ostream& os, const Item& item) {
+        item.print();
+        return os;
+    }
+};
+
+class Block {
+private:
+    string type;
+    int hardness;
+
+public:
+    Block(string t, int h) : type(t), hardness(h) {}
+
+    void breakBlock(int efficiency) {
+        if (efficiency < hardness)
+            throw IneffectiveToolException();
+
+        cout << type << " block broken!" << endl;
+    }
+};
+
+class Mob {
+private:
+    string name;
+    int hp;
+
+public:
+    Mob(string n, int h) : name(n), hp(h) {}
+
+    void takeDamage(int dmg) {
+        hp -= dmg;
+
+        if (hp <= 0) {
+            cout << name << " defeated" << endl;
+        } else {
+            cout << name << " HP: " << hp << endl;
+        }
+    }
+};
+
+class Tool : public Item {
+private:
+    int durability;
+    int efficiency;
+
+public:
+    Tool(string n, string r, int d, int e)
+        : Item(n, r), durability(d), efficiency(e) {}
+
+    void use() override {
+        cout << "Using tool..." << endl;
+    }
+
+    void useOnBlock(Block& b) {
+        if (durability <= 0)
+            throw ToolBrokenException();
+
+        b.breakBlock(efficiency);
+        durability--;
+    }
+
+    int getEfficiency() const {
+        return efficiency;
+    }
+
+    Tool operator+(const Tool& other) {
+        return Tool(name + "+" + other.name, rarity, durability + other.durability, efficiency);
+    }
+
+    bool operator==(const Tool& other) {
+        return efficiency == other.efficiency;
+    }
+
+    void print() const override {
+        cout << "Tool: " << name << " | durability: " << durability << " | efficiency: " << efficiency;
+    }
+};
+
+class Weapon : public Item {
+private:
+    int damage;
+
+public:
+    Weapon(string n, string r, int d) : Item(n, r), damage(d) {}
+
+    void use() override {
+        cout << "Using weapon..." << endl;
+    }
+
+    void useOnMob(Mob& m) {
+        m.takeDamage(damage);
+    }
+
+    int getDamage() const {
+        return damage;
+    }
+
+    void print() const override {
+        cout << "Weapon: " << name << " | damage: " << damage;
+    }
+};
+
+class Player {
+protected:
+    string name;
+    Item* inventory[10];
+    int count;
+
+public:
+    Player(string n) : name(n), count(0) {}
+
+    void addItem(Item* item) {
+        if (count < 10)
+            inventory[count++] = item;
+    }
+
+    virtual void mineBlock(Block& b, Tool* t) {
+        t->useOnBlock(b);
+    }
+
+    virtual void attackMob(Mob& m, Weapon* w) {
+        w->useOnMob(m);
+    }
+
+    void useItem(Item* item) {
+        item->use();
+    }
+
+    virtual ~Player() {}
+};
+
+class EnchantedPlayer : public Player {
+public:
+    EnchantedPlayer(string n) : Player(n) {}
+
+    void mineBlock(Block& b, Tool* t) override {
+        if (rand() % 2 == 0) {
+            cout << "Unbreaking activated!" << endl;
+            b.breakBlock(t->getEfficiency());
+        } else {
+            t->useOnBlock(b);
+        }
+    }
+
+    void attackMob(Mob& m, Weapon* w) override {
+        cout << "Sharpness activated!" << endl;
+        m.takeDamage(w->getDamage() + 3);
+    }
+};
+
+int main() {
+
+    srand(0);
+
+    try {
+        Tool* pickaxe = new Tool("Pickaxe", "common", 3, 5);
+        Weapon* sword = new Weapon("Sword", "rare", 4);
+
+        Block stone("Stone", 4);
+        Mob zombie("Zombie", 10);
+
+        Player p1("Steve");
+        EnchantedPlayer p2("Herobrine");
+        
+        p1.addItem(pickaxe);
+        p1.addItem(sword);
+
+        p2.addItem(pickaxe);
+        p2.addItem(sword);
+
+        cout << "\n-- Player 1 --\n";
+        p1.mineBlock(stone, pickaxe);
+        p1.attackMob(zombie, sword);
+
+        cout << "\n-- Player 2 --\n";
+        p2.mineBlock(stone, pickaxe);
+        p2.attackMob(zombie, sword);
+
+        delete pickaxe;
+        delete sword;
+    }
+    catch (exception& e) {
+        cout << "Error: " << e.what() << endl;
+    }
+
+    return 0;
+}
