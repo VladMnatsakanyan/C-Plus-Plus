@@ -1,0 +1,24 @@
+#include <iostream>
+
+int parz(int x) {
+    if(x <= 1) {
+        return 0;
+    } 
+    for(int i = 2; i * i <= x; i++) {
+        if(x % i == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+int main()
+{
+    int n;
+    std::cin >> n;
+    if(parz(n) == 1) {
+        std::cout << "YES";
+    } else {
+        std::cout << "NO";
+    }
+    return 0;
+}
