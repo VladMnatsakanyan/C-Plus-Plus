@@ -1,0 +1,23 @@
+#include <iostream>
+
+long long erkuakan_nerkayacum(unsigned n) {
+    long long erkuakan = 0;
+    long long dirq = 1;
+    if(n == 0) {
+        return 0;
+    }
+    while (n > 0) {
+        erkuakan = erkuakan + (n % 2) * dirq;
+        dirq = dirq * 10;
+        n = n / 2;
+    }
+    return erkuakan;
+}
+int main()
+{
+    unsigned x;
+    std::cin >> x;
+    long long ardyunq = erkuakan_nerkayacum(x);
+    std::cout << ardyunq;
+    return 0;
+}
