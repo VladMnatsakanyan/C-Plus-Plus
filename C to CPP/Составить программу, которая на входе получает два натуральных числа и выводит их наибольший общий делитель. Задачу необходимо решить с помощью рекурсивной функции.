@@ -1,0 +1,18 @@
+#include <iostream>
+
+int bajanarar(int a, int b) {
+    if(b == 0) {
+        return a;
+    } return bajanarar(b, a % b);
+}
+
+int main()
+{
+    int x;
+    int y;
+    std::cin >> x;
+    std::cin >> y;
+    int ardyunq = bajanarar(x, y);
+    std::cout << ardyunq;
+    return 0;
+}
