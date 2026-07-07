@@ -1,0 +1,230 @@
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+class Shape3D {
+public:
+    virtual double getVolume() = 0;
+
+    virtual double getLateralSurfaceArea() = 0;
+
+    virtual void print() = 0;
+
+    virtual ~Shape3D() {}
+};
+
+class Parallelepiped : public Shape3D {
+private:
+    double length;
+    double width;
+    double height;
+
+public:
+    Parallelepiped(double l, double w, double h) {
+        length = l;
+        width = w;
+        height = h;
+    }
+
+    double getVolume() override {
+        return length * width * height;
+    }
+
+    double getLateralSurfaceArea() override {
+        return 2 * height * (length + width);
+    }
+
+    void print() override {
+        cout << "Parallelepiped" << endl;
+        cout << "Length: " << length << endl;
+        cout << "Width: " << width << endl;
+        cout << "Height: " << height << endl;
+        cout << "Volume: " << getVolume() << endl;
+        cout << "Lateral Surface Area: "
+             << getLateralSurfaceArea() << endl;
+    }
+};
+
+class Cylinder : public Shape3D {
+private:
+    double radius;
+    double height;
+
+public:
+    Cylinder(double r, double h) {
+        radius = r;
+        height = h;
+    }
+
+    double getVolume() override {
+        return M_PI * radius * radius * height;
+    }
+
+    double getLateralSurfaceArea() override {
+        return 2 * M_PI * radius * height;
+    }
+
+    void print() override {
+        cout << "Cylinder" << endl;
+        cout << "Radius: " << radius << endl;
+        cout << "Height: " << height << endl;
+        cout << "Volume: " << getVolume() << endl;
+        cout << "Lateral Surface Area: " << getLateralSurfaceArea() << endl;
+    }
+};
+
+class Cone : public Shape3D {
+private:
+    double radius;
+    double height;
+
+public:
+    Cone(double r, double h) {
+        radius = r;
+        height = h;
+    }
+
+    double getVolume() override {
+        return (1.0 / 3.0) * M_PI * radius * radius * height;
+    }
+
+    double getLateralSurfaceArea() override {
+        return M_PI * radius * sqrt(radius * radius + height * height);
+    }
+
+    void print() override {
+        cout << "Cone" << endl;
+        cout << "Radius: " << radius << endl;
+        cout << "Height: " << height << endl;
+        cout << "Volume: " << getVolume() << endl;
+        cout << "Lateral Surface Area: " << getLateralSurfaceArea() << endl;
+    }
+};
+
+class Sphere : public Shape3D {
+private:
+    double radius;
+
+public:
+    Sphere(double r = 0) {
+        radius = r;
+    }
+
+    double getRadius() {
+        return radius;
+    }
+
+    double getVolume() override {
+        return (4.0 / 3.0) * M_PI * radius * radius * radius;
+    }
+
+    double getLateralSurfaceArea() override {
+        return 4 * M_PI * radius * radius;
+    }
+
+    void print() override {
+        cout << "Sphere" << endl;
+        cout << "Radius: " << radius << endl;
+        cout << "Volume: " << getVolume() << endl;
+        cout << "Lateral Surface Area: " << getLateralSurfaceArea() << endl;
+    }
+};
+
+void printSortedSpheres(Sphere spheres[], int size) {
+
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = i + 1; j < size; j++) {
+            if (spheres[i].getRadius() < spheres[j].getRadius()) {
+                swap(spheres[i], spheres[j]);
+            }
+        }
+    }
+
+    for (int i = 0; i < size; i++) {
+        spheres[i].print();
+        cout << endl;
+    }
+}
+
+void printVolumes(Shape3D* shapes[], int size) {
+
+    for (int i = 0; i < size; i++) {
+        cout << "Volume: " << shapes[i]->getVolume() << endl;
+    }
+}
+
+void printBestShape(Shape3D* shapes[], int size) {
+
+    Shape3D* best = shapes[0];
+
+    for (int i = 1; i < size; i++) {
+
+        if (shapes[i]->getVolume() > best->getVolume()) {
+            best = shapes[i];
+        }
+
+        else if (fabs(shapes[i]->getVolume() - best->getVolume()) < 0.0001) {
+            if (shapes[i]->getLateralSurfaceArea() < best->getLateralSurfaceArea()) {
+                best = shapes[i];
+            }
+        }
+    }
+    best->print();
+}
+
+int main() {
+
+    cout << "Test 1" << endl;
+
+    Sphere spheres[3] = {
+        Sphere(2.0),
+        Sphere(5.0),
+        Sphere(3.5)
+    };
+
+    printSortedSpheres(spheres, 3);
+    cout << "Test 2" << endl;
+
+    Shape3D* shapes1[4];
+
+    shapes1[0] = new Parallelepiped(2.0, 3.0, 4.0);
+
+    shapes1[1] = new Cylinder(2.0, 5.0);
+
+    shapes1[2] = new Cone(1.0, 3.0);
+
+    shapes1[3] = new Sphere(3.0);
+
+    printVolumes(shapes1, 4);
+
+    cout << endl;
+
+    cout << "Test 3" << endl;
+
+    Shape3D* shapes2[5];
+
+    shapes2[0] = new Cylinder(2.0, 7.0);
+
+    shapes2[1] = new Cone(4.0, 5.0);
+
+    shapes2[2] = new Sphere(3.0);
+
+    shapes2[3] = new Parallelepiped(2.0, 4.0, 6.0);
+
+    shapes2[4] = new Sphere(5.0);
+
+    printBestShape(shapes2, 5);
+
+
+    for (int i = 0; i < 4; i++) {
+        delete shapes1[i];
+    }
+
+    for (int i = 0; i < 5; i++) {
+        delete shapes2[i];
+    }
+
+    return 0;
+}
