@@ -1,0 +1,22 @@
+#include <iostream>
+#include <string> 
+int main()
+{
+    double usd;
+    std::string text;
+    double rate;
+    std::cin >> usd;
+    std::cin >> text;
+    if(text == "No") {
+        rate = 500;
+        usd = usd * 500;
+        std::cout << usd;
+    } else if(text == "Yes") {
+        std::cin >> rate;
+        usd = usd * rate;
+        std::cout << usd;
+    } else {
+        std::cout << "Non-valid";
+    }
+    return 0;
+}
