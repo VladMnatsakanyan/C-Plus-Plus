@@ -1,0 +1,70 @@
+ #include <iostream>
+#include <iomanip>
+#include <string>
+
+class BankAccount {
+private:
+    int accountNumber;
+    double balance;
+    std::string ownerName;
+    int pin;
+
+    bool isPinCorrect(int enteredPin) const {
+        return enteredPin == pin;
+    }
+
+    bool isWithdrawalAllowed(double amount) const {
+        return amount > 0 && amount <= balance;
+    }
+
+public:
+    BankAccount(int accNum, const std::string& name, double initialBalance, int initialPin)
+        : accountNumber(accNum), ownerName(name), balance(initialBalance), pin(initialPin) {}
+
+    ~BankAccount() {
+        std::cout << "Account for " << ownerName << " is closed." << std::endl;
+    }
+
+    void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            std::cout << "Deposited: $" << std::fixed << std::setprecision(2) << amount << std::endl;
+        }
+    }
+
+    void withdraw(double amount, int enteredPin) {
+        if (!isPinCorrect(enteredPin)) {
+            std::cout << "Incorrect PIN." << std::endl;
+            return;
+        }
+
+        if (isWithdrawalAllowed(amount)) {
+            balance -= amount;
+            std::cout << "Withdrawn: $" << std::fixed << std::setprecision(2) << amount << std::endl;
+        }
+    }
+
+    void checkBalance(int enteredPin) const {
+        if (isPinCorrect(enteredPin)) {
+            std::cout << "Balance: $" << std::fixed << std::setprecision(2) << balance << std::endl;
+        }
+    }
+
+    void changePin(int oldPin, int newPin) {
+        if (isPinCorrect(oldPin)) {
+            pin = newPin;
+            std::cout << "PIN successfully changed." << std::endl;
+        }
+    }
+};
+
+int main() {
+    BankAccount acc(123456789, "John Doe", 1000.50, 1234);
+
+    acc.deposit(21.5);
+    acc.withdraw(200, 1234);
+    acc.checkBalance(1234);
+    acc.changePin(1234, 5678);
+
+    return 0;
+}
