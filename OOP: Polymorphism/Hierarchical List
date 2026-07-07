@@ -1,0 +1,161 @@
+#include <iostream>
+#include <climits>
+
+using namespace std;
+
+class HierarchicalList {
+public:
+    virtual int minimum() = 0;
+
+    virtual int sumOfIntegers() = 0;
+
+    virtual int depth() = 0;
+
+    virtual void addComponent(HierarchicalList* component) = 0;
+
+    virtual ~HierarchicalList() {}
+};
+
+class Integer : public HierarchicalList {
+private:
+    int value;
+
+public:
+    Integer(int v) {
+        value = v;
+    }
+
+    int minimum() override {
+        return value;
+    }
+
+    int sumOfIntegers() override {
+        return value;
+    }
+
+    int depth() override {
+        return 0;
+    }
+
+    void addComponent(HierarchicalList* component) override {}
+};
+
+class EmptyList : public HierarchicalList {
+public:
+    int minimum() override {
+        return INT_MAX;
+    }
+
+    int sumOfIntegers() override {
+        return 0;
+    }
+
+    int depth() override {
+        return 1;
+    }
+
+    void addComponent(HierarchicalList* component) override {}
+};
+
+class NonEmptyList : public HierarchicalList {
+private:
+    HierarchicalList* components[10];
+    int count;
+
+public:
+    NonEmptyList() {
+        count = 0;
+    }
+
+    int minimum() override {
+
+        int minValue = INT_MAX;
+
+        for (int i = 0; i < count; i++) {
+            int current = components[i]->minimum();
+            if (current < minValue) {
+                minValue = current;
+            }
+        }
+        return minValue;
+    }
+
+    int sumOfIntegers() override {
+
+        int sum = 0;
+        for (int i = 0; i < count; i++) {
+            sum += components[i]->sumOfIntegers();
+        }
+        return sum;
+    }
+
+    int depth() override {
+
+        int maxDepth = 0;
+        for (int i = 0; i < count; i++) {
+            int currentDepth = components[i]->depth();
+            if (currentDepth > maxDepth) {
+                maxDepth = currentDepth;
+            }
+        }
+        return 1 + maxDepth;
+    }
+
+    void addComponent(HierarchicalList* component) override {
+        if (count < 10) {
+            components[count++] = component;
+        }
+    }
+};
+
+int main() {
+
+    EmptyList* e = new EmptyList;
+
+    HierarchicalList* int1 = new Integer(1);
+    HierarchicalList* int2 = new Integer(2);
+    HierarchicalList* int3 = new Integer(3);
+    HierarchicalList* int4 = new Integer(4);
+
+    HierarchicalList* list1 = new NonEmptyList;
+
+    list1->addComponent(int4);
+    list1->addComponent(int3);
+
+    HierarchicalList* list2_1 = new NonEmptyList;
+
+    list2_1->addComponent(int1);
+
+    HierarchicalList* list2 = new NonEmptyList;
+
+    list2->addComponent(e);
+    list2->addComponent(list2_1);
+
+    HierarchicalList* list = new NonEmptyList;
+
+    list->addComponent(list1);
+    list->addComponent(list2);
+    list->addComponent(int2);
+
+    cout << "[[4, 3], [[], [1]], 2]" << endl;
+
+    cout << "sum of integers = " << list->sumOfIntegers() << endl;
+
+    cout << "depth = " << list->depth() << endl;
+
+    cout << "minimum = " << list->minimum() << endl << endl;
+
+
+    delete e;
+    delete int1;
+    delete int2;
+    delete int3;
+    delete int4;
+
+    delete list1;
+    delete list2_1;
+    delete list2;
+    delete list;
+
+    return 0;
+}
