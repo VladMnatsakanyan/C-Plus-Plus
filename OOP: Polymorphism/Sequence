@@ -1,0 +1,144 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+class Sequence {
+public:
+    virtual ~Sequence() {}
+
+    virtual int getElement(int index) const = 0;
+
+    virtual int getSum(int count) const = 0;
+};
+
+class ArithmeticSequence : public Sequence {
+private:
+    int start;
+    int difference;
+
+public:
+    ArithmeticSequence(int s, int d) {
+        start = s;
+        difference = d;
+    }
+
+    int getElement(int index) const override {
+        return start + index * difference;
+    }
+
+    int getSum(int count) const override {
+        return count * (2 * start + (count - 1) * difference) / 2;
+    }
+};
+
+class GeometricSequence : public Sequence {
+private:
+    int start;
+    int ratio;
+
+public:
+    GeometricSequence(int s, int r) {
+        start = s;
+        ratio = r;
+    }
+
+    int getElement(int index) const override {
+        return start * pow(ratio, index);
+    }
+
+    int getSum(int count) const override {
+        if (ratio == 1)
+            return start * count;
+
+        return start * (1 - pow(ratio, count)) / (1 - ratio);
+    }
+};
+
+int main() {
+    ArithmeticSequence arr[3] = {
+        ArithmeticSequence(1, 2),
+        ArithmeticSequence(0, 5),
+        ArithmeticSequence(10, 1)
+    };
+
+    int maxIndex1 = 0;
+    int maxValue = arr[0].getElement(9);
+
+    for (int i = 1; i < 3; i++) {
+        if (arr[i].getElement(9) > maxValue) {
+            maxValue = arr[i].getElement(9);
+            maxIndex1 = i;
+        }
+    }
+
+    cout << maxIndex1 << endl;
+
+    Sequence* seqs[4];
+
+    seqs[0] = new ArithmeticSequence(1, 1);
+    seqs[1] = new ArithmeticSequence(2, 2);
+    seqs[2] = new GeometricSequence(1, 2);
+    seqs[3] = new GeometricSequence(2, 3);
+
+    int n = 5;
+
+    int maxIndex2 = 0;
+    int maxSum = seqs[0]->getSum(n);
+
+    for (int i = 1; i < 4; i++) {
+        if (seqs[i]->getSum(n) > maxSum) {
+            maxSum = seqs[i]->getSum(n);
+            maxIndex2 = i;
+        }
+    }
+
+    cout << maxIndex2 << endl;
+
+    Sequence* test[3];
+
+    test[0] = new ArithmeticSequence(1, 1);
+    test[1] = new GeometricSequence(1, 1);
+    test[2] = new ArithmeticSequence(1, 2);
+
+    int count = 5;
+
+    int matches[3] = {0};
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = i + 1; j < 3; j++) {
+
+            int equalPrefix = 0;
+
+            for (int k = 0; k < count; k++) {
+                if (test[i]->getElement(k) ==
+                    test[j]->getElement(k)) {
+                    equalPrefix++;
+                }
+            }
+
+            matches[i] += equalPrefix;
+            matches[j] += equalPrefix;
+        }
+    }
+
+    int bestIndex = 0;
+
+    for (int i = 1; i < 3; i++) {
+        if (matches[i] > matches[bestIndex]) {
+            bestIndex = i;
+        }
+    }
+
+    cout << bestIndex << endl;
+
+    for (int i = 0; i < 4; i++) {
+        delete seqs[i];
+    }
+
+    for (int i = 0; i < 3; i++) {
+        delete test[i];
+    }
+
+    return 0;
+}
